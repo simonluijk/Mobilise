@@ -56,9 +56,9 @@ def reset_database(post_reset=None):
     """
 
     st = Config()
-    with lcd(st.local_package):
-        with prefix('. "$WORKON_HOME/%s/bin/activate"' % st.venv):
-            local('rm -f database.db')
+    with lcd(st.project_path):
+        with prefix('. "$WORKON_HOME/%s/bin/activate"' % st.project_name):
+            local('rm -f dev.db')
             local('python manage.py syncdb --noinput')
             local('python manage.py migrate')
 
