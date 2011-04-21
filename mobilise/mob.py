@@ -8,7 +8,7 @@ from optparse import OptionParser
 from fabric.network import interpret_host_string as _interpret_host_string
 from fabric.utils import indent
 
-from mobilise.commands import build_pybundle, build_venv, deploy
+from mobilise.commands import build_pybundle, build_venv, deploy, reset_database
 from mobilise.config import Config
 
 
@@ -24,6 +24,7 @@ def main():
         'build_pybundle': build_pybundle,
         'build_venv': build_venv,
         'deploy': deploy,
+        'reset_database': reset_database,
     }
 
     parser = OptionParser(usage=__USAGE__)
