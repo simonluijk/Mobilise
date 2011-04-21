@@ -41,7 +41,7 @@ class Config(object):
         try:
             return self.conf.get("core", "requirements")
         except (NoSectionError, NoOptionError):
-            return u"requirements.txt"
+            return u"requirements/project.txt"
 
     @property
     def pybundle(self):
@@ -55,7 +55,7 @@ class Config(object):
         try:
             return self.conf.get("core", "conf_dir")
         except (NoSectionError, NoOptionError):
-            return u"conf.d"
+            return u"deploy/conf.d"
 
     @property
     def pid_dir(self):
