@@ -40,7 +40,7 @@ def main():
         max_len = reduce(lambda a, b: max(a, len(b)), _commands.keys(), 0)
         sep = ' '
         trail = '...'
-        for name in _commands.keys():
+        for name in sorted(_commands.keys()):
             output = None
             # Print first line of docstring
             func = _commands[name]
