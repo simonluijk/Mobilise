@@ -10,18 +10,6 @@ from fabric.contrib import files, project
 from mobilise.config import Config
 
 
-_configs = {
-    'nginx.conf': [
-        '/etc/nginx/sites-enabled/',
-        'service nginx reload'
-    ],
-    'monit.conf': [
-        '/etc/monit/conf.d/',
-        'monit reload'
-    ],
-}
-
-
 @runs_once
 def build_pybundle(post_setup=None):
     """
@@ -67,6 +55,17 @@ def reset_database(post_reset=None):
         post_reset(st)
 
 
+_configs = {
+    'nginx.conf': [
+        '/etc/nginx/sites-enabled/',
+        'service nginx reload'
+    ],
+    'monit.conf': [
+        '/etc/monit/conf.d/',
+        'monit reload'
+    ],
+}
+
 def deploy(test=None, post_setup=None):
     """
     Deploy project to remote host
@@ -83,33 +82,35 @@ def deploy(test=None, post_setup=None):
 
     project.rsync_project(
         remote_dir=os.path.dirname(st.remote_path),
-        local_dir=st.local_path,
+        local_dir=st.project_path,
         exclude=[
-            'settings_local\.py',
+            '*settings\_local\.py',
             'fabfile\.py',
+            'celerybeat\-schedule',
             '\.git*', '*\.db','*\.pyc'],
         delete=True
     )
 
-    run('rm -rf "$WORKON_HOME/%s"' % st.venv)
-    run('mkvirtualenv "$WORKON_HOME/%s"' % st.venv)
-    run('pip -qE "$WORKON_HOME/%s" install "%s"' % (st.venv, st.remote_pybundle))
+    with cd(st.remote_path):
+        run('rm -rf "$WORKON_HOME/%s"' % st.project_name)
+        run('virtualenv "$WORKON_HOME/%s"' % st.project_name)
+        run('pip -qE "$WORKON_HOME/%s" install "%s"' % (st.project_name, st.pybundle))
 
-    for config in _configs.keys():
-        dest_dir, command = _configs[config]
-        source_path = os.path.join(st.remote_conf_dir, config)
-        if files.exists(source_path):
-            dest_path = os.path.join(dest_dir, '%s.conf' % st.project_name)
-            if not files.exists(dest_path):
-                sudo('ln -s %s %s' % (source_path, dest_path))
-            if command:
-                sudo(command)
+        for config in _configs.keys():
+            dest_dir, command = _configs[config]
+            source_path = os.path.join(st.conf_dir, config)
+            if files.exists(source_path):
+                dest_path = os.path.join(dest_dir, '%s.conf' % st.project_name)
+                if not files.exists(dest_path):
+                    source_path = os.path.join(st.remote_path, source_path)
+                    sudo('ln -sf %s %s' % (source_path, dest_path))
+                if command:
+                    sudo(command)
 
-    if post_setup:
-        post_setup(st)
+        if post_setup:
+            post_setup(st)
 
-    with cd(st.remote_package):
-        with prefix('. "$WORKON_HOME/%s/bin/activate"' % st.venv):
+        with prefix('. "$WORKON_HOME/%s/bin/activate"' % st.project_name):
             run('echo "from settings_production import *" > settings_local.py')
             run('python manage.py syncdb --noinput')
             try:
@@ -117,6 +118,8 @@ def deploy(test=None, post_setup=None):
             except:
                 pass
 
-    with cd(st.remote_path):
-        if files.exists('gunicorn.py'):
-            run('./gunicorn.py reload')
+        if st.conf.has_section('gunicorn'):
+            run('dj-daemon gunicorn reload')
+
+        if st.conf.has_section('celery'):
+            run('dj-daemon celery reload')
