@@ -62,7 +62,7 @@ class Config(object):
         try:
             return self.conf.get("core", "pid_dir")
         except (NoSectionError, NoOptionError):
-            return u"/var/run/django"
+            return u"/var/run"
 
     @property
     def virtual_env(self):
