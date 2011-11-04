@@ -86,7 +86,7 @@ def deploy(test=None, post_setup=None):
         exclude=[
             '*settings\_local\.py',
             'fabfile\.py',
-            'celerybeat\-schedule',
+            '*celerybeat\-schedule',
             '\.git*', '*\.db','*\.pyc'],
         delete=True
     )
