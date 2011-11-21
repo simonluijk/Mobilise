@@ -112,7 +112,10 @@ def deploy(test=None, post_setup=None):
 
         with prefix('. "$WORKON_HOME/%s/bin/activate"' % st.project_name):
             run('echo "from settings_production import *" > settings_local.py')
-            run('python manage.py syncdb --noinput')
+            try:
+                run('python manage.py syncdb --noinput')
+            except:
+                pass
             try:
                 run('python manage.py migrate')
             except:
