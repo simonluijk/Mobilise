@@ -4,11 +4,30 @@
 import sys
 
 from optparse import OptionParser
-from fabric.network import interpret_host_string as _interpret_host_string
+from fabric.network import normalize as _normalize
 from fabric.utils import indent
 
 from mobilise.commands import build_pybundle, build_venv, deploy, reset_database
 from mobilise.config import Config
+
+
+def _interpret_host_string(host_string):
+    """
+    Apply given host string to the env dict.
+
+    Split it into hostname, username and port (using
+    `~fabric.network.normalize`) and store the full host string plus its
+    constituent parts into the appropriate env vars.
+
+    Returns the parts as split out by ``normalize`` for convenience.
+    """
+    from fabric.state import env
+    username, hostname, port = _normalize(host_string)
+    env.host_string = host_string
+    env.host = hostname
+    env.user = username
+    env.port = port
+    return username, hostname, port
 
 
 __USAGE__ = """%prog [OPTIONS] [command]"""
